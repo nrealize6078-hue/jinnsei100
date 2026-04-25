@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>人生100年時代の教科書</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#2a2a2a;font-family:sans-serif;margin:0;padding:0;overflow-x:hidden;}
+.toc-bar{
+    position:fixed;top:0;left:0;right:0;z-index:999;
+    background:#111;overflow-x:auto;overflow-y:hidden;
+    white-space:nowrap;-webkit-overflow-scrolling:touch;
+    border-bottom:2px solid #333;scrollbar-width:none;
+}
+.toc-bar::-webkit-scrollbar{display:none;}
+.toc-bar .toc-item{
+    display:inline-block;color:#666;text-decoration:none;
+    padding:12px 16px;font-size:0.82em;
+    border-bottom:3px solid transparent;
+    transition:all 0.3s ease;white-space:nowrap;
+}
+.toc-bar .toc-item:hover{color:#ccc;}
+.toc-bar .toc-item.active{
+    color:#c8a96e;font-weight:bold;
+    border-bottom:3px solid #c8a96e;
+    background:rgba(200,169,110,0.15);
+    text-shadow:0 0 12px rgba(200,169,110,0.9),0 0 25px rgba(200,169,110,0.5);
+}
+.toc-sidebar{display:none;}
+@media(min-width:769px){
+    .toc-bar{display:none;}
+    .toc-sidebar{
+        display:block;position:fixed;top:0;left:0;bottom:0;width:220px;
+        background:#111;overflow-y:auto;z-index:999;padding:1em 0;
+        scrollbar-width:thin;scrollbar-color:#444 #111;
+    }
+    .toc-sidebar h2{color:#c8a96e;font-size:1em;padding:0.5em 1.2em 0.8em;border-bottom:1px solid #333;}
+    .toc-sidebar .toc-item{
+        display:block;color:#666;text-decoration:none;
+        padding:0.6em 1.2em;font-size:0.85em;
+        border-left:3px solid transparent;transition:all 0.3s ease;white-space:normal;
+    }
+    .toc-sidebar .toc-item:hover{color:#ccc;background:#1a1a1a;}
+    .toc-sidebar .toc-item.active{
+        color:#c8a96e;font-weight:bold;
+        border-left:3px solid #c8a96e;
+        background:rgba(200,169,110,0.1);
+        text-shadow:0 0 12px rgba(200,169,110,0.9),0 0 25px rgba(200,169,110,0.5);
+    }
+    .main{margin-left:220px;}
+}
+.main{padding:44px 0 0 0;}
+@media(min-width:769px){.main{padding-top:0;}}
+.page{max-width:100%;margin:0;padding:0;position:relative;overflow:hidden;}
+@media(min-width:769px){.page{max-width:800px;}}
+.page img{width:108%;display:block;margin:0 -4%;padding:0;}
+.page-num{position:absolute;bottom:8px;right:12px;background:rgba(0,0,0,0.5);color:#fff;font-size:0.7em;padding:2px 8px;border-radius:3px;}
+[id^="p"]{scroll-margin-top:50px;}
+@media(min-width:769px){[id^="p"]{scroll-margin-top:10px;}.page img{width:104%;margin:0 -2%;}}
+.page.cover{overflow:visible;}
+.page.cover img{width:100%;margin:0;}
+.tts-btn{
+    position:fixed;bottom:20px;right:20px;z-index:1000;
+    width:52px;height:52px;border-radius:50%;
+    background:#c8a96e;color:#fff;border:none;
+    font-size:1.5em;cursor:pointer;
+    box-shadow:0 3px 10px rgba(0,0,0,0.4);
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;transition:all 0.3s;
+}
+.tts-btn:hover{background:#b8954e;}
+.tts-btn.speaking{background:#e85050;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 3px 10px rgba(0,0,0,0.4);}50%{box-shadow:0 3px 24px rgba(232,80,80,0.7);}}
+.tts-toast{
+    position:fixed;bottom:84px;right:20px;z-index:1001;
+    background:rgba(0,0,0,0.85);color:#fff;padding:10px 18px;
+    border-radius:10px;font-size:0.82em;
+    opacity:0;transition:opacity 0.3s;pointer-events:none;
+    max-width:260px;
+}
+.tts-toast.show{opacity:1;}
+.tts-progress{
+    position:fixed;bottom:78px;right:20px;z-index:1000;
+    width:52px;height:4px;border-radius:2px;background:rgba(255,255,255,0.15);
+    overflow:hidden;opacity:0;transition:opacity 0.3s;
+}
+.tts-progress.show{opacity:1;}
+.tts-progress-bar{height:100%;background:#c8a96e;width:0%;transition:width 0.3s;border-radius:2px;}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+<script>
+
+var AUDIO_AVAILABLE = new Set(["page_011.mp3", "page_012.mp3", "page_013.mp3", "page_014.mp3", "page_015.mp3", "page_016.mp3", "page_017.mp3", "page_018.mp3", "page_019.mp3", "page_020.mp3", "page_021.mp3", "page_022.mp3", "page_023.mp3", "page_024.mp3", "page_025.mp3", "page_026.mp3", "page_027.mp3", "page_028.mp3", "page_029.mp3", "page_030.mp3", "page_031.mp3", "page_032.mp3", "page_033.mp3", "page_034.mp3", "page_035.mp3", "page_036.mp3", "page_037.mp3", "page_038.mp3", "page_039.mp3", "page_040.mp3", "page_041.mp3", "page_042.mp3", "page_043.mp3", "page_044.mp3", "page_045.mp3", "page_046.mp3", "page_047.mp3", "page_048.mp3", "page_049.mp3", "page_050.mp3", "page_051.mp3", "page_052.mp3", "page_053.mp3", "page_054.mp3", "page_055.mp3", "page_056.mp3", "page_057.mp3", "page_058.mp3", "page_059.mp3", "page_060.mp3", "page_061.mp3", "page_062.mp3", "page_063.mp3", "page_064.mp3", "page_065.mp3", "page_066.mp3", "page_067.mp3", "page_068.mp3", "page_069.mp3", "page_070.mp3", "page_071.mp3", "page_072.mp3", "page_073.mp3", "page_074.mp3", "page_075.mp3", "page_076.mp3", "page_077.mp3", "page_078.mp3", "page_079.mp3", "page_080.mp3", "page_081.mp3", "page_082.mp3", "page_083.mp3", "page_084.mp3", "page_085.mp3", "page_086.mp3", "page_087.mp3", "page_088.mp3", "page_089.mp3", "page_090.mp3", "page_091.mp3", "page_092.mp3", "page_093.mp3", "page_094.mp3", "page_095.mp3", "page_096.mp3", "page_097.mp3", "page_098.mp3", "page_099.mp3", "page_100.mp3", "page_101.mp3", "page_102.mp3", "page_103.mp3", "page_104.mp3", "page_105.mp3", "page_106.mp3", "page_107.mp3", "page_108.mp3", "page_109.mp3", "page_110.mp3", "page_111.mp3", "page_112.mp3", "page_113.mp3", "page_114.mp3", "page_115.mp3", "page_116.mp3", "page_117.mp3", "page_118.mp3", "page_119.mp3", "page_120.mp3", "page_121.mp3", "page_122.mp3", "page_123.mp3", "page_124.mp3", "page_125.mp3", "page_126.mp3", "page_127.mp3", "page_128.mp3", "page_129.mp3", "page_130.mp3", "page_131.mp3", "page_132.mp3", "page_133.mp3", "page_134.mp3", "page_135.mp3", "page_136.mp3", "page_137.mp3", "page_138.mp3", "page_139.mp3", "page_140.mp3", "page_141.mp3", "page_142.mp3", "page_143.mp3", "page_144.mp3", "page_145.mp3", "page_146.mp3", "page_147.mp3", "page_148.mp3", "page_149.mp3", "page_150.mp3", "page_151.mp3", "page_152.mp3", "page_153.mp3", "page_154.mp3", "page_155.mp3", "page_156.mp3", "page_157.mp3", "page_158.mp3", "page_159.mp3", "page_160.mp3", "page_161.mp3", "page_162.mp3", "page_163.mp3", "page_164.mp3", "page_165.mp3", "page_166.mp3", "page_167.mp3", "page_168.mp3", "page_169.mp3", "page_170.mp3", "page_171.mp3", "page_172.mp3", "page_173.mp3", "page_174.mp3", "page_175.mp3", "page_176.mp3", "page_177.mp3", "page_178.mp3", "page_179.mp3", "page_180.mp3", "page_181.mp3", "page_182.mp3", "page_183.mp3", "page_184.mp3", "page_185.mp3", "page_186.mp3", "page_187.mp3", "page_188.mp3", "page_189.mp3", "page_190.mp3", "page_191.mp3", "page_192.mp3", "page_193.mp3", "page_194.mp3", "page_195.mp3", "page_196.mp3", "page_197.mp3", "page_198.mp3", "page_199.mp3", "page_200.mp3", "page_201.mp3", "page_202.mp3", "page_203.mp3", "page_204.mp3", "page_205.mp3", "page_206.mp3", "page_207.mp3", "page_208.mp3", "page_209.mp3", "page_210.mp3", "page_211.mp3", "page_212.mp3", "page_213.mp3", "page_214.mp3", "page_215.mp3", "page_216.mp3", "page_217.mp3", "page_218.mp3", "page_219.mp3", "page_220.mp3", "page_221.mp3", "page_222.mp3", "page_223.mp3", "page_224.mp3", "page_225.mp3", "page_226.mp3", "page_227.mp3", "page_228.mp3", "page_229.mp3", "page_230.mp3", "page_231.mp3", "page_232.mp3", "page_233.mp3", "page_234.mp3", "page_235.mp3", "page_236.mp3", "page_237.mp3"]);
+function getAudioDataURL(filename){
+  if(!AUDIO_AVAILABLE.has(filename)) return null;
+  return 'audio/' + filename;
+}
+</script>
+</head>
+<body>
+<nav class="toc-bar" id="tocBar">
+<a href="#p1" class="toc-item active" data-target="ch0">表紙</a>
+<a href="#p2" class="toc-item" data-target="ch1">目次</a>
+<a href="#p12" class="toc-item" data-target="ch11">序章</a>
+<a href="#p16" class="toc-item" data-target="ch15">第1章</a>
+<a href="#p48" class="toc-item" data-target="ch47">第2章</a>
+<a href="#p82" class="toc-item" data-target="ch81">第3章</a>
+<a href="#p113" class="toc-item" data-target="ch112">第4章</a>
+<a href="#p137" class="toc-item" data-target="ch136">第5章</a>
+<a href="#p160" class="toc-item" data-target="ch159">第6章</a>
+<a href="#p174" class="toc-item" data-target="ch173">第7章</a>
+<a href="#p223" class="toc-item" data-target="ch222">終章</a>
+<a href="#p230" class="toc-item" data-target="ch229">あとがき</a>
+<a href="#p232" class="toc-item" data-target="ch231">巻末付録</a>
+</nav>
+<nav class="toc-sidebar" id="tocSidebar">
+<h2>目次</h2>
+<a href="#p1" class="toc-item active" data-target="ch0">表紙</a>
+<a href="#p2" class="toc-item" data-target="ch1">目次</a>
+<a href="#p12" class="toc-item" data-target="ch11">序章</a>
+<a href="#p16" class="toc-item" data-target="ch15">第1章</a>
+<a href="#p48" class="toc-item" data-target="ch47">第2章</a>
+<a href="#p82" class="toc-item" data-target="ch81">第3章</a>
+<a href="#p113" class="toc-item" data-target="ch112">第4章</a>
+<a href="#p137" class="toc-item" data-target="ch136">第5章</a>
+<a href="#p160" class="toc-item" data-target="ch159">第6章</a>
+<a href="#p174" class="toc-item" data-target="ch173">第7章</a>
+<a href="#p223" class="toc-item" data-target="ch222">終章</a>
+<a href="#p230" class="toc-item" data-target="ch229">あとがき</a>
+<a href="#p232" class="toc-item" data-target="ch231">巻末付録</a>
+</nav>
+<div class="main" id="main">
+<div class="page cover" id="p1" data-chapter="ch0" data-page="0"><img src="images/p001.jpg" alt="Page 1"><span class="page-num">1/239</span></div>
+<div class="page" id="p2" data-chapter="ch1" data-page="1"><img src="images/p002.jpg" alt="Page 2"><span class="page-num">2/239</span></div>
+<div class="page" id="p3" data-chapter="ch1" data-page="2"><img src="images/p003.jpg" alt="Page 3"><span class="page-num">3/239</span></div>
+<div class="page" id="p4" data-chapter="ch1" data-page="3"><img src="images/p004.jpg" alt="Page 4"><span class="page-num">4/239</span></div>
+<div class="page" id="p5" data-chapter="ch1" data-page="4"><img src="images/p005.jpg" alt="Page 5"><span class="page-num">5/239</span></div>
+<div class="page" id="p6" data-chapter="ch1" data-page="5"><img src="images/p006.jpg" alt="Page 6"><span class="page-num">6/239</span></div>
+<div class="page" id="p7" data-chapter="ch1" data-page="6"><img src="images/p007.jpg" alt="Page 7"><span class="page-num">7/239</span></div>
+<div class="page" id="p8" data-chapter="ch1" data-page="7"><img src="images/p008.jpg" alt="Page 8"><span class="page-num">8/239</span></div>
+<div class="page" id="p9" data-chapter="ch1" data-page="8"><img src="images/p009.jpg" alt="Page 9"><span class="page-num">9/239</span></div>
+<div class="page" id="p10" data-chapter="ch1" data-page="9"><img src="images/p010.jpg" alt="Page 10"><span class="page-num">10/239</span></div>
+<div class="page" id="p11" data-chapter="ch1" data-page="10"><img src="images/p011.jpg" alt="Page 11"><span class="page-num">11/239</span></div>
+<div class="page" id="p12" data-chapter="ch11" data-page="11"><img src="images/p012.jpg" alt="Page 12"><span class="page-num">12/239</span></div>
+<div class="page" id="p13" data-chapter="ch11" data-page="12"><img src="images/p013.jpg" alt="Page 13"><span class="page-num">13/239</span></div>
+<div class="page" id="p14" data-chapter="ch11" data-page="13"><img src="images/p014.jpg" alt="Page 14"><span class="page-num">14/239</span></div>
+<div class="page" id="p15" data-chapter="ch11" data-page="14"><img src="images/p015.jpg" alt="Page 15"><span class="page-num">15/239</span></div>
+<div class="page" id="p16" data-chapter="ch15" data-page="15"><img src="images/p016.jpg" alt="Page 16"><span class="page-num">16/239</span></div>
+<div class="page" id="p17" data-chapter="ch15" data-page="16"><img src="images/p017.jpg" alt="Page 17"><span class="page-num">17/239</span></div>
+<div class="page" id="p18" data-chapter="ch15" data-page="17"><img src="images/p018.jpg" alt="Page 18"><span class="page-num">18/239</span></div>
+<div class="page" id="p19" data-chapter="ch15" data-page="18"><img src="images/p019.jpg" alt="Page 19"><span class="page-num">19/239</span></div>
+<div class="page" id="p20" data-chapter="ch15" data-page="19"><img src="images/p020.jpg" alt="Page 20"><span class="page-num">20/239</span></div>
+<div class="page" id="p21" data-chapter="ch15" data-page="20"><img src="images/p021.jpg" alt="Page 21"><span class="page-num">21/239</span></div>
+<div class="page" id="p22" data-chapter="ch15" data-page="21"><img src="images/p022.jpg" alt="Page 22"><span class="page-num">22/239</span></div>
+<div class="page" id="p23" data-chapter="ch15" data-page="22"><img src="images/p023.jpg" alt="Page 23"><span class="page-num">23/239</span></div>
+<div class="page" id="p24" data-chapter="ch15" data-page="23"><img src="images/p024.jpg" alt="Page 24"><span class="page-num">24/239</span></div>
+<div class="page" id="p25" data-chapter="ch15" data-page="24"><img src="images/p025.jpg" alt="Page 25"><span class="page-num">25/239</span></div>
+<div class="page" id="p26" data-chapter="ch15" data-page="25"><img src="images/p026.jpg" alt="Page 26"><span class="page-num">26/239</span></div>
+<div class="page" id="p27" data-chapter="ch15" data-page="26"><img src="images/p027.jpg" alt="Page 27"><span class="page-num">27/239</span></div>
+<div class="page" id="p28" data-chapter="ch15" data-page="27"><img src="images/p028.jpg" alt="Page 28"><span class="page-num">28/239</span></div>
+<div class="page" id="p29" data-chapter="ch15" data-page="28"><img src="images/p029.jpg" alt="Page 29"><span class="page-num">29/239</span></div>
+<div class="page" id="p30" data-chapter="ch15" data-page="29"><img src="images/p030.jpg" alt="Page 30"><span class="page-num">30/239</span></div>
+<div class="page" id="p31" data-chapter="ch15" data-page="30"><img src="images/p031.jpg" alt="Page 31"><span class="page-num">31/239</span></div>
+<div class="page" id="p32" data-chapter="ch15" data-page="31"><img src="images/p032.jpg" alt="Page 32"><span class="page-num">32/239</span></div>
+<div class="page" id="p33" data-chapter="ch15" data-page="32"><img src="images/p033.jpg" alt="Page 33"><span class="page-num">33/239</span></div>
+<div class="page" id="p34" data-chapter="ch15" data-page="33"><img src="images/p034.jpg" alt="Page 34"><span class="page-num">34/239</span></div>
+<div class="page" id="p35" data-chapter="ch15" data-page="34"><img src="images/p035.jpg" alt="Page 35"><span class="page-num">35/239</span></div>
+<div class="page" id="p36" data-chapter="ch15" data-page="35"><img src="images/p036.jpg" alt="Page 36"><span class="page-num">36/239</span></div>
+<div class="page" id="p37" data-chapter="ch15" data-page="36"><img src="images/p037.jpg" alt="Page 37"><span class="page-num">37/239</span></div>
+<div class="page" id="p38" data-chapter="ch15" data-page="37"><img src="images/p038.jpg" alt="Page 38"><span class="page-num">38/239</span></div>
+<div class="page" id="p39" data-chapter="ch15" data-page="38"><img src="images/p039.jpg" alt="Page 39"><span class="page-num">39/239</span></div>
+<div class="page" id="p40" data-chapter="ch15" data-page="39"><img src="images/p040.jpg" alt="Page 40"><span class="page-num">40/239</span></div>
+<div class="page" id="p41" data-chapter="ch15" data-page="40"><img src="images/p041.jpg" alt="Page 41"><span class="page-num">41/239</span></div>
+<div class="page" id="p42" data-chapter="ch15" data-page="41"><img src="images/p042.jpg" alt="Page 42"><span class="page-num">42/239</span></div>
+<div class="page" id="p43" data-chapter="ch15" data-page="42"><img src="images/p043.jpg" alt="Page 43"><span class="page-num">43/239</span></div>
+<div class="page" id="p44" data-chapter="ch15" data-page="43"><img src="images/p044.jpg" alt="Page 44"><span class="page-num">44/239</span></div>
+<div class="page" id="p45" data-chapter="ch15" data-page="44"><img src="images/p045.jpg" alt="Page 45"><span class="page-num">45/239</span></div>
+<div class="page" id="p46" data-chapter="ch15" data-page="45"><img src="images/p046.jpg" alt="Page 46"><span class="page-num">46/239</span></div>
+<div class="page" id="p47" data-chapter="ch15" data-page="46"><img src="images/p047.jpg" alt="Page 47"><span class="page-num">47/239</span></div>
+<div class="page" id="p48" data-chapter="ch47" data-page="47"><img src="images/p048.jpg" alt="Page 48"><span class="page-num">48/239</span></div>
+<div class="page" id="p49" data-chapter="ch47" data-page="48"><img src="images/p049.jpg" alt="Page 49"><span class="page-num">49/239</span></div>
+<div class="page" id="p50" data-chapter="ch47" data-page="49"><img src="images/p050.jpg" alt="Page 50"><span class="page-num">50/239</span></div>
+<div class="page" id="p51" data-chapter="ch47" data-page="50"><img src="images/p051.jpg" alt="Page 51"><span class="page-num">51/239</span></div>
+<div class="page" id="p52" data-chapter="ch47" data-page="51"><img src="images/p052.jpg" alt="Page 52"><span class="page-num">52/239</span></div>
+<div class="page" id="p53" data-chapter="ch47" data-page="52"><img src="images/p053.jpg" alt="Page 53"><span class="page-num">53/239</span></div>
+<div class="page" id="p54" data-chapter="ch47" data-page="53"><img src="images/p054.jpg" alt="Page 54"><span class="page-num">54/239</span></div>
+<div class="page" id="p55" data-chapter="ch47" data-page="54"><img src="images/p055.jpg" alt="Page 55"><span class="page-num">55/239</span></div>
+<div class="page" id="p56" data-chapter="ch47" data-page="55"><img src="images/p056.jpg" alt="Page 56"><span class="page-num">56/239</span></div>
+<div class="page" id="p57" data-chapter="ch47" data-page="56"><img src="images/p057.jpg" alt="Page 57"><span class="page-num">57/239</span></div>
+<div class="page" id="p58" data-chapter="ch47" data-page="57"><img src="images/p058.jpg" alt="Page 58"><span class="page-num">58/239</span></div>
+<div class="page" id="p59" data-chapter="ch47" data-page="58"><img src="images/p059.jpg" alt="Page 59"><span class="page-num">59/239</span></div>
+<div class="page" id="p60" data-chapter="ch47" data-page="59"><img src="images/p060.jpg" alt="Page 60"><span class="page-num">60/239</span></div>
+<div class="page" id="p61" data-chapter="ch47" data-page="60"><img src="images/p061.jpg" alt="Page 61"><span class="page-num">61/239</span></div>
+<div class="page" id="p62" data-chapter="ch47" data-page="61"><img src="images/p062.jpg" alt="Page 62"><span class="page-num">62/239</span></div>
+<div class="page" id="p63" data-chapter="ch47" data-page="62"><img src="images/p063.jpg" alt="Page 63"><span class="page-num">63/239</span></div>
+<div class="page" id="p64" data-chapter="ch47" data-page="63"><img src="images/p064.jpg" alt="Page 64"><span class="page-num">64/239</span></div>
+<div class="page" id="p65" data-chapter="ch47" data-page="64"><img src="images/p065.jpg" alt="Page 65"><span class="page-num">65/239</span></div>
+<div class="page" id="p66" data-chapter="ch47" data-page="65"><img src="images/p066.jpg" alt="Page 66"><span class="page-num">66/239</span></div>
+<div class="page" id="p67" data-chapter="ch47" data-page="66"><img src="images/p067.jpg" alt="Page 67"><span class="page-num">67/239</span></div>
+<div class="page" id="p68" data-chapter="ch47" data-page="67"><img src="images/p068.jpg" alt="Page 68"><span class="page-num">68/239</span></div>
+<div class="page" id="p69" data-chapter="ch47" data-page="68"><img src="images/p069.jpg" alt="Page 69"><span class="page-num">69/239</span></div>
+<div class="page" id="p70" data-chapter="ch47" data-page="69"><img src="images/p070.jpg" alt="Page 70"><span class="page-num">70/239</span></div>
+<div class="page" id="p71" data-chapter="ch47" data-page="70"><img src="images/p071.jpg" alt="Page 71"><span class="page-num">71/239</span></div>
+<div class="page" id="p72" data-chapter="ch47" data-page="71"><img src="images/p072.jpg" alt="Page 72"><span class="page-num">72/239</span></div>
+<div class="page" id="p73" data-chapter="ch47" data-page="72"><img src="images/p073.jpg" alt="Page 73"><span class="page-num">73/239</span></div>
+<div class="page" id="p74" data-chapter="ch47" data-page="73"><img src="images/p074.jpg" alt="Page 74"><span class="page-num">74/239</span></div>
+<div class="page" id="p75" data-chapter="ch47" data-page="74"><img src="images/p075.jpg" alt="Page 75"><span class="page-num">75/239</span></div>
+<div class="page" id="p76" data-chapter="ch47" data-page="75"><img src="images/p076.jpg" alt="Page 76"><span class="page-num">76/239</span></div>
+<div class="page" id="p77" data-chapter="ch47" data-page="76"><img src="images/p077.jpg" alt="Page 77"><span class="page-num">77/239</span></div>
+<div class="page" id="p78" data-chapter="ch47" data-page="77"><img src="images/p078.jpg" alt="Page 78"><span class="page-num">78/239</span></div>
+<div class="page" id="p79" data-chapter="ch47" data-page="78"><img src="images/p079.jpg" alt="Page 79"><span class="page-num">79/239</span></div>
+<div class="page" id="p80" data-chapter="ch47" data-page="79"><img src="images/p080.jpg" alt="Page 80"><span class="page-num">80/239</span></div>
+<div class="page" id="p81" data-chapter="ch47" data-page="80"><img src="images/p081.jpg" alt="Page 81"><span class="page-num">81/239</span></div>
+<div class="page" id="p82" data-chapter="ch81" data-page="81"><img src="images/p082.jpg" alt="Page 82"><span class="page-num">82/239</span></div>
+<div class="page" id="p83" data-chapter="ch81" data-page="82"><img src="images/p083.jpg" alt="Page 83"><span class="page-num">83/239</span></div>
+<div class="page" id="p84" data-chapter="ch81" data-page="83"><img src="images/p084.jpg" alt="Page 84"><span class="page-num">84/239</span></div>
+<div class="page" id="p85" data-chapter="ch81" data-page="84"><img src="images/p085.jpg" alt="Page 85"><span class="page-num">85/239</span></div>
+<div class="page" id="p86" data-chapter="ch81" data-page="85"><img src="images/p086.jpg" alt="Page 86"><span class="page-num">86/239</span></div>
+<div class="page" id="p87" data-chapter="ch81" data-page="86"><img src="images/p087.jpg" alt="Page 87"><span class="page-num">87/239</span></div>
+<div class="page" id="p88" data-chapter="ch81" data-page="87"><img src="images/p088.jpg" alt="Page 88"><span class="page-num">88/239</span></div>
+<div class="page" id="p89" data-chapter="ch81" data-page="88"><img src="images/p089.jpg" alt="Page 89"><span class="page-num">89/239</span></div>
+<div class="page" id="p90" data-chapter="ch81" data-page="89"><img src="images/p090.jpg" alt="Page 90"><span class="page-num">90/239</span></div>
+<div class="page" id="p91" data-chapter="ch81" data-page="90"><img src="images/p091.jpg" alt="Page 91"><span class="page-num">91/239</span></div>
+<div class="page" id="p92" data-chapter="ch81" data-page="91"><img src="images/p092.jpg" alt="Page 92"><span class="page-num">92/239</span></div>
+<div class="page" id="p93" data-chapter="ch81" data-page="92"><img src="images/p093.jpg" alt="Page 93"><span class="page-num">93/239</span></div>
+<div class="page" id="p94" data-chapter="ch81" data-page="93"><img src="images/p094.jpg" alt="Page 94"><span class="page-num">94/239</span></div>
+<div class="page" id="p95" data-chapter="ch81" data-page="94"><img src="images/p095.jpg" alt="Page 95"><span class="page-num">95/239</span></div>
+<div class="page" id="p96" data-chapter="ch81" data-page="95"><img src="images/p096.jpg" alt="Page 96"><span class="page-num">96/239</span></div>
+<div class="page" id="p97" data-chapter="ch81" data-page="96"><img src="images/p097.jpg" alt="Page 97"><span class="page-num">97/239</span></div>
+<div class="page" id="p98" data-chapter="ch81" data-page="97"><img src="images/p098.jpg" alt="Page 98"><span class="page-num">98/239</span></div>
+<div class="page" id="p99" data-chapter="ch81" data-page="98"><img src="images/p099.jpg" alt="Page 99"><span class="page-num">99/239</span></div>
+<div class="page" id="p100" data-chapter="ch81" data-page="99"><img src="images/p100.jpg" alt="Page 100"><span class="page-num">100/239</span></div>
+<div class="page" id="p101" data-chapter="ch81" data-page="100"><img src="images/p101.jpg" alt="Page 101"><span class="page-num">101/239</span></div>
+<div class="page" id="p102" data-chapter="ch81" data-page="101"><img src="images/p102.jpg" alt="Page 102"><span class="page-num">102/239</span></div>
+<div class="page" id="p103" data-chapter="ch81" data-page="102"><img src="images/p103.jpg" alt="Page 103"><span class="page-num">103/239</span></div>
+<div class="page" id="p104" data-chapter="ch81" data-page="103"><img src="images/p104.jpg" alt="Page 104"><span class="page-num">104/239</span></div>
+<div class="page" id="p105" data-chapter="ch81" data-page="104"><img src="images/p105.jpg" alt="Page 105"><span class="page-num">105/239</span></div>
+<div class="page" id="p106" data-chapter="ch81" data-page="105"><img src="images/p106.jpg" alt="Page 106"><span class="page-num">106/239</span></div>
+<div class="page" id="p107" data-chapter="ch81" data-page="106"><img src="images/p107.jpg" alt="Page 107"><span class="page-num">107/239</span></div>
+<div class="page" id="p108" data-chapter="ch81" data-page="107"><img src="images/p108.jpg" alt="Page 108"><span class="page-num">108/239</span></div>
+<div class="page" id="p109" data-chapter="ch81" data-page="108"><img src="images/p109.jpg" alt="Page 109"><span class="page-num">109/239</span></div>
+<div class="page" id="p110" data-chapter="ch81" data-page="109"><img src="images/p110.jpg" alt="Page 110"><span class="page-num">110/239</span></div>
+<div class="page" id="p111" data-chapter="ch81" data-page="110"><img src="images/p111.jpg" alt="Page 111"><span class="page-num">111/239</span></div>
+<div class="page" id="p112" data-chapter="ch81" data-page="111"><img src="images/p112.jpg" alt="Page 112"><span class="page-num">112/239</span></div>
+<div class="page" id="p113" data-chapter="ch112" data-page="112"><img src="images/p113.jpg" alt="Page 113"><span class="page-num">113/239</span></div>
+<div class="page" id="p114" data-chapter="ch112" data-page="113"><img src="images/p114.jpg" alt="Page 114"><span class="page-num">114/239</span></div>
+<div class="page" id="p115" data-chapter="ch112" data-page="114"><img src="images/p115.jpg" alt="Page 115"><span class="page-num">115/239</span></div>
+<div class="page" id="p116" data-chapter="ch112" data-page="115"><img src="images/p116.jpg" alt="Page 116"><span class="page-num">116/239</span></div>
+<div class="page" id="p117" data-chapter="ch112" data-page="116"><img src="images/p117.jpg" alt="Page 117"><span class="page-num">117/239</span></div>
+<div class="page" id="p118" data-chapter="ch112" data-page="117"><img src="images/p118.jpg" alt="Page 118"><span class="page-num">118/239</span></div>
+<div class="page" id="p119" data-chapter="ch112" data-page="118"><img src="images/p119.jpg" alt="Page 119"><span class="page-num">119/239</span></div>
+<div class="page" id="p120" data-chapter="ch112" data-page="119"><img src="images/p120.jpg" alt="Page 120"><span class="page-num">120/239</span></div>
+<div class="page" id="p121" data-chapter="ch112" data-page="120"><img src="images/p121.jpg" alt="Page 121"><span class="page-num">121/239</span></div>
+<div class="page" id="p122" data-chapter="ch112" data-page="121"><img src="images/p122.jpg" alt="Page 122"><span class="page-num">122/239</span></div>
+<div class="page" id="p123" data-chapter="ch112" data-page="122"><img src="images/p123.jpg" alt="Page 123"><span class="page-num">123/239</span></div>
+<div class="page" id="p124" data-chapter="ch112" data-page="123"><img src="images/p124.jpg" alt="Page 124"><span class="page-num">124/239</span></div>
+<div class="page" id="p125" data-chapter="ch112" data-page="124"><img src="images/p125.jpg" alt="Page 125"><span class="page-num">125/239</span></div>
+<div class="page" id="p126" data-chapter="ch112" data-page="125"><img src="images/p126.jpg" alt="Page 126"><span class="page-num">126/239</span></div>
+<div class="page" id="p127" data-chapter="ch112" data-page="126"><img src="images/p127.jpg" alt="Page 127"><span class="page-num">127/239</span></div>
+<div class="page" id="p128" data-chapter="ch112" data-page="127"><img src="images/p128.jpg" alt="Page 128"><span class="page-num">128/239</span></div>
+<div class="page" id="p129" data-chapter="ch112" data-page="128"><img src="images/p129.jpg" alt="Page 129"><span class="page-num">129/239</span></div>
+<div class="page" id="p130" data-chapter="ch112" data-page="129"><img src="images/p130.jpg" alt="Page 130"><span class="page-num">130/239</span></div>
+<div class="page" id="p131" data-chapter="ch112" data-page="130"><img src="images/p131.jpg" alt="Page 131"><span class="page-num">131/239</span></div>
+<div class="page" id="p132" data-chapter="ch112" data-page="131"><img src="images/p132.jpg" alt="Page 132"><span class="page-num">132/239</span></div>
+<div class="page" id="p133" data-chapter="ch112" data-page="132"><img src="images/p133.jpg" alt="Page 133"><span class="page-num">133/239</span></div>
+<div class="page" id="p134" data-chapter="ch112" data-page="133"><img src="images/p134.jpg" alt="Page 134"><span class="page-num">134/239</span></div>
+<div class="page" id="p135" data-chapter="ch112" data-page="134"><img src="images/p135.jpg" alt="Page 135"><span class="page-num">135/239</span></div>
+<div class="page" id="p136" data-chapter="ch112" data-page="135"><img src="images/p136.jpg" alt="Page 136"><span class="page-num">136/239</span></div>
+<div class="page" id="p137" data-chapter="ch136" data-page="136"><img src="images/p137.jpg" alt="Page 137"><span class="page-num">137/239</span></div>
+<div class="page" id="p138" data-chapter="ch136" data-page="137"><img src="images/p138.jpg" alt="Page 138"><span class="page-num">138/239</span></div>
+<div class="page" id="p139" data-chapter="ch136" data-page="138"><img src="images/p139.jpg" alt="Page 139"><span class="page-num">139/239</span></div>
+<div class="page" id="p140" data-chapter="ch136" data-page="139"><img src="images/p140.jpg" alt="Page 140"><span class="page-num">140/239</span></div>
+<div class="page" id="p141" data-chapter="ch136" data-page="140"><img src="images/p141.jpg" alt="Page 141"><span class="page-num">141/239</span></div>
+<div class="page" id="p142" data-chapter="ch136" data-page="141"><img src="images/p142.jpg" alt="Page 142"><span class="page-num">142/239</span></div>
+<div class="page" id="p143" data-chapter="ch136" data-page="142"><img src="images/p143.jpg" alt="Page 143"><span class="page-num">143/239</span></div>
+<div class="page" id="p144" data-chapter="ch136" data-page="143"><img src="images/p144.jpg" alt="Page 144"><span class="page-num">144/239</span></div>
+<div class="page" id="p145" data-chapter="ch136" data-page="144"><img src="images/p145.jpg" alt="Page 145"><span class="page-num">145/239</span></div>
+<div class="page" id="p146" data-chapter="ch136" data-page="145"><img src="images/p146.jpg" alt="Page 146"><span class="page-num">146/239</span></div>
+<div class="page" id="p147" data-chapter="ch136" data-page="146"><img src="images/p147.jpg" alt="Page 147"><span class="page-num">147/239</span></div>
+<div class="page" id="p148" data-chapter="ch136" data-page="147"><img src="images/p148.jpg" alt="Page 148"><span class="page-num">148/239</span></div>
+<div class="page" id="p149" data-chapter="ch136" data-page="148"><img src="images/p149.jpg" alt="Page 149"><span class="page-num">149/239</span></div>
+<div class="page" id="p150" data-chapter="ch136" data-page="149"><img src="images/p150.jpg" alt="Page 150"><span class="page-num">150/239</span></div>
+<div class="page" id="p151" data-chapter="ch136" data-page="150"><img src="images/p151.jpg" alt="Page 151"><span class="page-num">151/239</span></div>
+<div class="page" id="p152" data-chapter="ch136" data-page="151"><img src="images/p152.jpg" alt="Page 152"><span class="page-num">152/239</span></div>
+<div class="page" id="p153" data-chapter="ch136" data-page="152"><img src="images/p153.jpg" alt="Page 153"><span class="page-num">153/239</span></div>
+<div class="page" id="p154" data-chapter="ch136" data-page="153"><img src="images/p154.jpg" alt="Page 154"><span class="page-num">154/239</span></div>
+<div class="page" id="p155" data-chapter="ch136" data-page="154"><img src="images/p155.jpg" alt="Page 155"><span class="page-num">155/239</span></div>
+<div class="page" id="p156" data-chapter="ch136" data-page="155"><img src="images/p156.jpg" alt="Page 156"><span class="page-num">156/239</span></div>
+<div class="page" id="p157" data-chapter="ch136" data-page="156"><img src="images/p157.jpg" alt="Page 157"><span class="page-num">157/239</span></div>
+<div class="page" id="p158" data-chapter="ch136" data-page="157"><img src="images/p158.jpg" alt="Page 158"><span class="page-num">158/239</span></div>
+<div class="page" id="p159" data-chapter="ch136" data-page="158"><img src="images/p159.jpg" alt="Page 159"><span class="page-num">159/239</span></div>
+<div class="page" id="p160" data-chapter="ch159" data-page="159"><img src="images/p160.jpg" alt="Page 160"><span class="page-num">160/239</span></div>
+<div class="page" id="p161" data-chapter="ch159" data-page="160"><img src="images/p161.jpg" alt="Page 161"><span class="page-num">161/239</span></div>
+<div class="page" id="p162" data-chapter="ch159" data-page="161"><img src="images/p162.jpg" alt="Page 162"><span class="page-num">162/239</span></div>
+<div class="page" id="p163" data-chapter="ch159" data-page="162"><img src="images/p163.jpg" alt="Page 163"><span class="page-num">163/239</span></div>
+<div class="page" id="p164" data-chapter="ch159" data-page="163"><img src="images/p164.jpg" alt="Page 164"><span class="page-num">164/239</span></div>
+<div class="page" id="p165" data-chapter="ch159" data-page="164"><img src="images/p165.jpg" alt="Page 165"><span class="page-num">165/239</span></div>
+<div class="page" id="p166" data-chapter="ch159" data-page="165"><img src="images/p166.jpg" alt="Page 166"><span class="page-num">166/239</span></div>
+<div class="page" id="p167" data-chapter="ch159" data-page="166"><img src="images/p167.jpg" alt="Page 167"><span class="page-num">167/239</span></div>
+<div class="page" id="p168" data-chapter="ch159" data-page="167"><img src="images/p168.jpg" alt="Page 168"><span class="page-num">168/239</span></div>
+<div class="page" id="p169" data-chapter="ch159" data-page="168"><img src="images/p169.jpg" alt="Page 169"><span class="page-num">169/239</span></div>
+<div class="page" id="p170" data-chapter="ch159" data-page="169"><img src="images/p170.jpg" alt="Page 170"><span class="page-num">170/239</span></div>
+<div class="page" id="p171" data-chapter="ch159" data-page="170"><img src="images/p171.jpg" alt="Page 171"><span class="page-num">171/239</span></div>
+<div class="page" id="p172" data-chapter="ch159" data-page="171"><img src="images/p172.jpg" alt="Page 172"><span class="page-num">172/239</span></div>
+<div class="page" id="p173" data-chapter="ch159" data-page="172"><img src="images/p173.jpg" alt="Page 173"><span class="page-num">173/239</span></div>
+<div class="page" id="p174" data-chapter="ch173" data-page="173"><img src="images/p174.jpg" alt="Page 174"><span class="page-num">174/239</span></div>
+<div class="page" id="p175" data-chapter="ch173" data-page="174"><img src="images/p175.jpg" alt="Page 175"><span class="page-num">175/239</span></div>
+<div class="page" id="p176" data-chapter="ch173" data-page="175"><img src="images/p176.jpg" alt="Page 176"><span class="page-num">176/239</span></div>
+<div class="page" id="p177" data-chapter="ch173" data-page="176"><img src="images/p177.jpg" alt="Page 177"><span class="page-num">177/239</span></div>
+<div class="page" id="p178" data-chapter="ch173" data-page="177"><img src="images/p178.jpg" alt="Page 178"><span class="page-num">178/239</span></div>
+<div class="page" id="p179" data-chapter="ch173" data-page="178"><img src="images/p179.jpg" alt="Page 179"><span class="page-num">179/239</span></div>
+<div class="page" id="p180" data-chapter="ch173" data-page="179"><img src="images/p180.jpg" alt="Page 180"><span class="page-num">180/239</span></div>
+<div class="page" id="p181" data-chapter="ch173" data-page="180"><img src="images/p181.jpg" alt="Page 181"><span class="page-num">181/239</span></div>
+<div class="page" id="p182" data-chapter="ch173" data-page="181"><img src="images/p182.jpg" alt="Page 182"><span class="page-num">182/239</span></div>
+<div class="page" id="p183" data-chapter="ch173" data-page="182"><img src="images/p183.jpg" alt="Page 183"><span class="page-num">183/239</span></div>
+<div class="page" id="p184" data-chapter="ch173" data-page="183"><img src="images/p184.jpg" alt="Page 184"><span class="page-num">184/239</span></div>
+<div class="page" id="p185" data-chapter="ch173" data-page="184"><img src="images/p185.jpg" alt="Page 185"><span class="page-num">185/239</span></div>
+<div class="page" id="p186" data-chapter="ch173" data-page="185"><img src="images/p186.jpg" alt="Page 186"><span class="page-num">186/239</span></div>
+<div class="page" id="p187" data-chapter="ch173" data-page="186"><img src="images/p187.jpg" alt="Page 187"><span class="page-num">187/239</span></div>
+<div class="page" id="p188" data-chapter="ch173" data-page="187"><img src="images/p188.jpg" alt="Page 188"><span class="page-num">188/239</span></div>
+<div class="page" id="p189" data-chapter="ch173" data-page="188"><img src="images/p189.jpg" alt="Page 189"><span class="page-num">189/239</span></div>
+<div class="page" id="p190" data-chapter="ch173" data-page="189"><img src="images/p190.jpg" alt="Page 190"><span class="page-num">190/239</span></div>
+<div class="page" id="p191" data-chapter="ch173" data-page="190"><img src="images/p191.jpg" alt="Page 191"><span class="page-num">191/239</span></div>
+<div class="page" id="p192" data-chapter="ch173" data-page="191"><img src="images/p192.jpg" alt="Page 192"><span class="page-num">192/239</span></div>
+<div class="page" id="p193" data-chapter="ch173" data-page="192"><img src="images/p193.jpg" alt="Page 193"><span class="page-num">193/239</span></div>
+<div class="page" id="p194" data-chapter="ch173" data-page="193"><img src="images/p194.jpg" alt="Page 194"><span class="page-num">194/239</span></div>
+<div class="page" id="p195" data-chapter="ch173" data-page="194"><img src="images/p195.jpg" alt="Page 195"><span class="page-num">195/239</span></div>
+<div class="page" id="p196" data-chapter="ch173" data-page="195"><img src="images/p196.jpg" alt="Page 196"><span class="page-num">196/239</span></div>
+<div class="page" id="p197" data-chapter="ch173" data-page="196"><img src="images/p197.jpg" alt="Page 197"><span class="page-num">197/239</span></div>
+<div class="page" id="p198" data-chapter="ch173" data-page="197"><img src="images/p198.jpg" alt="Page 198"><span class="page-num">198/239</span></div>
+<div class="page" id="p199" data-chapter="ch173" data-page="198"><img src="images/p199.jpg" alt="Page 199"><span class="page-num">199/239</span></div>
+<div class="page" id="p200" data-chapter="ch173" data-page="199"><img src="images/p200.jpg" alt="Page 200"><span class="page-num">200/239</span></div>
+<div class="page" id="p201" data-chapter="ch173" data-page="200"><img src="images/p201.jpg" alt="Page 201"><span class="page-num">201/239</span></div>
+<div class="page" id="p202" data-chapter="ch173" data-page="201"><img src="images/p202.jpg" alt="Page 202"><span class="page-num">202/239</span></div>
+<div class="page" id="p203" data-chapter="ch173" data-page="202"><img src="images/p203.jpg" alt="Page 203"><span class="page-num">203/239</span></div>
+<div class="page" id="p204" data-chapter="ch173" data-page="203"><img src="images/p204.jpg" alt="Page 204"><span class="page-num">204/239</span></div>
+<div class="page" id="p205" data-chapter="ch173" data-page="204"><img src="images/p205.jpg" alt="Page 205"><span class="page-num">205/239</span></div>
+<div class="page" id="p206" data-chapter="ch173" data-page="205"><img src="images/p206.jpg" alt="Page 206"><span class="page-num">206/239</span></div>
+<div class="page" id="p207" data-chapter="ch173" data-page="206"><img src="images/p207.jpg" alt="Page 207"><span class="page-num">207/239</span></div>
+<div class="page" id="p208" data-chapter="ch173" data-page="207"><img src="images/p208.jpg" alt="Page 208"><span class="page-num">208/239</span></div>
+<div class="page" id="p209" data-chapter="ch173" data-page="208"><img src="images/p209.jpg" alt="Page 209"><span class="page-num">209/239</span></div>
+<div class="page" id="p210" data-chapter="ch173" data-page="209"><img src="images/p210.jpg" alt="Page 210"><span class="page-num">210/239</span></div>
+<div class="page" id="p211" data-chapter="ch173" data-page="210"><img src="images/p211.jpg" alt="Page 211"><span class="page-num">211/239</span></div>
+<div class="page" id="p212" data-chapter="ch173" data-page="211"><img src="images/p212.jpg" alt="Page 212"><span class="page-num">212/239</span></div>
+<div class="page" id="p213" data-chapter="ch173" data-page="212"><img src="images/p213.jpg" alt="Page 213"><span class="page-num">213/239</span></div>
+<div class="page" id="p214" data-chapter="ch173" data-page="213"><img src="images/p214.jpg" alt="Page 214"><span class="page-num">214/239</span></div>
+<div class="page" id="p215" data-chapter="ch173" data-page="214"><img src="images/p215.jpg" alt="Page 215"><span class="page-num">215/239</span></div>
+<div class="page" id="p216" data-chapter="ch173" data-page="215"><img src="images/p216.jpg" alt="Page 216"><span class="page-num">216/239</span></div>
+<div class="page" id="p217" data-chapter="ch173" data-page="216"><img src="images/p217.jpg" alt="Page 217"><span class="page-num">217/239</span></div>
+<div class="page" id="p218" data-chapter="ch173" data-page="217"><img src="images/p218.jpg" alt="Page 218"><span class="page-num">218/239</span></div>
+<div class="page" id="p219" data-chapter="ch173" data-page="218"><img src="images/p219.jpg" alt="Page 219"><span class="page-num">219/239</span></div>
+<div class="page" id="p220" data-chapter="ch173" data-page="219"><img src="images/p220.jpg" alt="Page 220"><span class="page-num">220/239</span></div>
+<div class="page" id="p221" data-chapter="ch173" data-page="220"><img src="images/p221.jpg" alt="Page 221"><span class="page-num">221/239</span></div>
+<div class="page" id="p222" data-chapter="ch173" data-page="221"><img src="images/p222.jpg" alt="Page 222"><span class="page-num">222/239</span></div>
+<div class="page" id="p223" data-chapter="ch222" data-page="222"><img src="images/p223.jpg" alt="Page 223"><span class="page-num">223/239</span></div>
+<div class="page" id="p224" data-chapter="ch222" data-page="223"><img src="images/p224.jpg" alt="Page 224"><span class="page-num">224/239</span></div>
+<div class="page" id="p225" data-chapter="ch222" data-page="224"><img src="images/p225.jpg" alt="Page 225"><span class="page-num">225/239</span></div>
+<div class="page" id="p226" data-chapter="ch222" data-page="225"><img src="images/p226.jpg" alt="Page 226"><span class="page-num">226/239</span></div>
+<div class="page" id="p227" data-chapter="ch222" data-page="226"><img src="images/p227.jpg" alt="Page 227"><span class="page-num">227/239</span></div>
+<div class="page" id="p228" data-chapter="ch222" data-page="227"><img src="images/p228.jpg" alt="Page 228"><span class="page-num">228/239</span></div>
+<div class="page" id="p229" data-chapter="ch222" data-page="228"><img src="images/p229.jpg" alt="Page 229"><span class="page-num">229/239</span></div>
+<div class="page" id="p230" data-chapter="ch229" data-page="229"><img src="images/p230.jpg" alt="Page 230"><span class="page-num">230/239</span></div>
+<div class="page" id="p231" data-chapter="ch229" data-page="230"><img src="images/p231.jpg" alt="Page 231"><span class="page-num">231/239</span></div>
+<div class="page" id="p232" data-chapter="ch231" data-page="231"><img src="images/p232.jpg" alt="Page 232"><span class="page-num">232/239</span></div>
+<div class="page" id="p233" data-chapter="ch231" data-page="232"><img src="images/p233.jpg" alt="Page 233"><span class="page-num">233/239</span></div>
+<div class="page" id="p234" data-chapter="ch231" data-page="233"><img src="images/p234.jpg" alt="Page 234"><span class="page-num">234/239</span></div>
+<div class="page" id="p235" data-chapter="ch231" data-page="234"><img src="images/p235.jpg" alt="Page 235"><span class="page-num">235/239</span></div>
+<div class="page" id="p236" data-chapter="ch231" data-page="235"><img src="images/p236.jpg" alt="Page 236"><span class="page-num">236/239</span></div>
+<div class="page" id="p237" data-chapter="ch231" data-page="236"><img src="images/p237.jpg" alt="Page 237"><span class="page-num">237/239</span></div>
+<div class="page" id="p238" data-chapter="ch231" data-page="237"><img src="images/p238.jpg" alt="Page 238"><span class="page-num">238/239</span></div>
+<div class="page cover" id="p239" data-chapter="ch231" data-page="238"><img src="images/p239.jpg" alt="Page 239"><span class="page-num">239/239</span></div>
+</div>
+<button class="tts-btn" id="ttsBtn" aria-label="読み上げ">&#x1f50a;</button>
+<div class="tts-toast" id="ttsToast"></div>
+<div class="tts-progress" id="ttsProgress"><div class="tts-progress-bar" id="ttsBar"></div></div>
+<script>
+var totalPages=239;
+var audio=null;
+var playing=false;
+var currentPage=-1;
+var autoNext=false;
+
+function getCurrentPage(){
+    var vt=window.scrollY+window.innerHeight*0.3;
+    var pages=document.querySelectorAll('.page[data-page]');
+    var best=0;
+    pages.forEach(function(e){
+        if(e.offsetTop<=vt) best=parseInt(e.getAttribute('data-page'));
+    });
+    return best;
+}
+
+function showToast(msg){
+    var t=document.getElementById('ttsToast');
+    t.textContent=msg;
+    t.classList.add('show');
+    setTimeout(function(){t.classList.remove('show');},3000);
+}
+
+function stopAudio(){
+    if(audio){audio.pause();audio.currentTime=0;}
+    playing=false;
+    autoNext=false;
+    document.getElementById('ttsBtn').classList.remove('speaking');
+    document.getElementById('ttsBtn').innerHTML='&#x1f50a;';
+    document.getElementById('ttsProgress').classList.remove('show');
+}
+
+function playPage(pgIdx){
+    if(pgIdx<0||pgIdx>=totalPages){
+        stopAudio();
+        showToast('読み上げ完了');
+        return;
+    }
+    currentPage=pgIdx;
+    var padded=String(pgIdx).padStart(3,'0');
+    var audioUrl = getAudioDataURL('page_'+padded+'.mp3');
+    if (!audioUrl) {{
+        if(autoNext&&playing){{
+            currentPage++;
+            playPage(currentPage);
+        }} else {{
+            stopAudio();
+        }}
+        return;
+    }}
+    var src = audioUrl;
+    
+    if(audio){audio.pause();}
+    audio=new Audio(src);
+    
+    audio.addEventListener('error',function(){
+        // Empty/missing file → skip to next
+        if(autoNext&&playing){
+            currentPage++;
+            playPage(currentPage);
+        } else {
+            stopAudio();
+        }
+    });
+    
+    audio.addEventListener('loadedmetadata',function(){
+        // Skip empty files (size 0)
+        if(audio.duration<0.5){
+            if(autoNext&&playing){
+                currentPage++;
+                playPage(currentPage);
+            }
+            return;
+        }
+        showToast('ページ '+(pgIdx+1)+' を読み上げ中...');
+        document.getElementById('ttsProgress').classList.add('show');
+    });
+    
+    audio.addEventListener('timeupdate',function(){
+        if(audio.duration>0){
+            var pct=(audio.currentTime/audio.duration)*100;
+            document.getElementById('ttsBar').style.width=pct+'%';
+        }
+    });
+    
+    audio.addEventListener('ended',function(){
+        document.getElementById('ttsBar').style.width='0%';
+        if(autoNext&&playing){
+            currentPage++;
+            if(currentPage<totalPages){
+                var el=document.getElementById('p'+(currentPage+1));
+                if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+                setTimeout(function(){playPage(currentPage);},400);
+            } else {
+                stopAudio();
+                showToast('読み上げ完了');
+            }
+        } else {
+            stopAudio();
+        }
+    });
+    
+    audio.play().catch(function(e){
+        if(autoNext&&playing){
+            currentPage++;
+            playPage(currentPage);
+        }
+    });
+}
+
+document.getElementById('ttsBtn').addEventListener('click',function(){
+    if(playing){
+        stopAudio();
+        showToast('読み上げ停止');
+        return;
+    }
+    playing=true;
+    autoNext=true;
+    document.getElementById('ttsBtn').classList.add('speaking');
+    document.getElementById('ttsBtn').innerHTML='&#x23f9;';
+    var pg=getCurrentPage();
+    currentPage=pg;
+    showToast('ページ '+(pg+1)+' から読み上げ開始');
+    playPage(pg);
+});
+
+/* Chapter highlight */
+function setActive(ch){
+    document.querySelectorAll('.toc-item').forEach(function(el){
+        if(el.getAttribute('data-target')===ch)el.classList.add('active');
+        else el.classList.remove('active');
+    });
+    var bar=document.getElementById('tocBar');
+    var act=bar.querySelector('.toc-item.active');
+    if(act)bar.scrollLeft=act.offsetLeft-bar.offsetWidth/2+act.offsetWidth/2;
+}
+var pages=document.querySelectorAll('.page[data-chapter]');
+var t=null;
+window.addEventListener('scroll',function(){
+    if(t)return;
+    t=setTimeout(function(){
+        t=null;
+        var vt=window.scrollY+window.innerHeight*0.15,best=null;
+        pages.forEach(function(e){if(e.offsetTop<=vt)best=e.getAttribute('data-chapter');});
+        if(best)setActive(best);
+    },80);
+});
+</script>
+</body>
+</html>
